@@ -21,6 +21,7 @@ const _layout = () => {
 
   return (
     <Tabs
+      initialRouteName="upload"
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,

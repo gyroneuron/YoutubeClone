@@ -1,27 +1,63 @@
-import { View,FlatList,Text, SafeAreaView, TouchableOpacity } from 'react-native'
-import React from 'react'
+import { View, FlatList, Text, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import TopBar from '../../components/TopBar';
 import TagsBar from '../../components/TagsBar';
+import VideoCard from '../../components/VideoCard';
+import CustomButton from '../../components/CustomButton';
+import { supabase } from '../../utils/supabase';
 
-const home = () => {
+const Home = () => {
+  // Fixing state initialization error
+  const [videoData, setVideoData] = useState([]);
 
-  const data = [];
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const fetchVideos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .select();
+
+      if (error) {
+        Alert.alert('Error fetching Videos', error.message);
+      } else {
+        console.log('Success', 'Videos fetched successfully');
+        console.log(data);
+        setVideoData(data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 dark:bg-dark-black-600 h-full w-full items-center justify-start">
-          <FlatList
-            data={data}
-            keyExtractor={(item) => item.id}
-            ListHeaderComponent={() => {
-              return (
-                <View className="w-full h-[92]">
-                  <TopBar/>
-                  <TagsBar/>
-                </View>
-              )
-            }}
-          />
+      <FlatList
+        data={videoData}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={() => {
+          return (
+            <View className="w-full h-[92]">
+              <TopBar />
+              <TagsBar />
+            </View>
+          );
+        }}
+        renderItem={({ item }) => (
+          <VideoCard video={item} />
+        )}
+        ListEmptyComponent={() => (
+          <View className="flex-1 h-[600] w-[90%] items-center justify-center self-center">
+            <Text className="font-Rbold text-dark-black-100 text-3xl">No Videos on Youtube</Text>
+            <Text className="font-Rmedium text-dark-black-300 text-xl">Be the first one to upload a video</Text>
+            <CustomButton name={'Fetch Videos'} textstyle={'text-lg font-Rbold'} handlePress={fetchVideos} />
+          </View>
+        )}
+      />
     </SafeAreaView>
-  )
+  );
 }
 
-export default home
+export default Home;

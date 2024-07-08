@@ -5,7 +5,6 @@ import { ActivityIndicator } from "react-native";
 const CustomButton = ({
   name,
   textstyle,
-  isLoading,
   handlePress,
   iconColor,
   image,
@@ -15,7 +14,7 @@ const CustomButton = ({
   return (
     <TouchableOpacity
       onPress={handlePress}
-      className={`w-full min-h-[62px] rounded-2xl flex-row my-10 bg-[#0D6EFD] items-center justify-center ${buttonStyles} ${
+      className={`w-full min-h-[62px] rounded-2xl flex-row my-10 bg-dark-black-100 items-center justify-center ${buttonStyles} ${
         submittingStatus ? "opacity-50" : "opacity-100"
       }`}
     >
@@ -28,7 +27,7 @@ const CustomButton = ({
         />
       ) : null}
       {submittingStatus ? (
-        <ActivityIndicator size="small" color="#fff" />
+        <ActivityIndicator size="small" color="#000000" />
       ) : (
         <Text className={`text-center ${textstyle}`}>{name}</Text>
       )}

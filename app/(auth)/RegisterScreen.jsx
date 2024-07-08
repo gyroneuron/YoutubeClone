@@ -9,10 +9,11 @@ import {
   Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import YoutubeLogo from '../assets/logos/yticontext.svg';
+import YoutubeLogo from '../../assets/logos/yticontext.svg';
 import CustomButton from "../../components/CustomButton";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { supabase } from '../../utils/supabase';
 
 const RegisterScreen = () => {
   const [username, setUsername] = useState("");
@@ -24,66 +25,99 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState("");
   const [isvalidPassword, setIsValidPassword] = useState(true);
   const [ispasswordtyping, setIsPasswordTyping] = useState(false);
-  const [isLoading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isValidConfirmPassword, setIsValidConfirmPassword] = useState(true);
+  const [isConfirmPassTyping, setIsConfirmPassTyping] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+  useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
 
   const handleSignup = async () => {
     if(!username || !email || !password){
-      Alert.alert('Error', 'Please fill in all the fields')
+      Alert.alert('Error', 'Please fill in all the fields');
     }
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     
     try {
-      const result = await createUser(email, password, username)
-      router.replace('LoginScreen')
+      const { data, error: signupError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            fullName: username,
+          },
+        },
+      });
+
+      if (signupError) {
+        Alert.alert('Error: ', signupError)
+      } else {
+        const {data: userData,  error: userUploadError } = await supabase
+          .from("users")
+          .insert(
+            { id: data.user.id, email, username: username},
+          )
+          .select();
+
+        if (userUploadError) {
+          Alert.alert('Error Creating User: ', userUploadError);
+        } else {
+
+          const {error: profileUploadError} = await supabase
+            .from("profiles")
+            .insert([
+              { user_id: userData[0].id, name: username }
+            ]);
+
+            if (profileUploadError) {
+              Alert.alert('Error Creating Profile:', profileUploadError)
+            } else {
+              Alert.alert("Success", "Signed up Successfully!!");
+              router.navigate("LoginScreen");
+            }
+        }
+      }
     } catch (error) {
-      Alert.alert('Error', error.message
-      )
-      setIsSubmitting(false)
+      console.log(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
-    const validateEmail = (email) => {
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      return emailRegex.test(email);
-    };
-
+    const validateEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
     setIsValidEmail(validateEmail(email));
   }, [email]);
 
   useEffect(() => {
-    const validatePassword = (password) => {
-      return password.length >= 8;
-    };
-
-    setIsValidPassword(validatePassword(password));
+    setIsValidPassword(password.length >= 8)
   }, [password]);
 
   useEffect(() => {
-    const validateUsername = (username) => {
-      return username.length >= 4;
-    };
-
-    setIsValidUsername(validateUsername(username));
+    setIsValidUsername( username.length >= 4)
   }, [username]);
 
+  useEffect(() => {
+    setIsValidConfirmPassword( confirmPassword === password )
+  }, [confirmPassword, password])
+
   return (
-    <SafeAreaView className="h-full bg-primary items-center justify-center">
+    <SafeAreaView className="h-full bg-dark-black-100 dark:bg-dark-black-600 items-center justify-center">
       <StatusBar barStyle={"light-content"} />
       <View className="flex-1 items-center justify-center w-[90%] h-full">
-        <YoutubeLogo height={50} width={100}/>
-        <Text className=" font-pbold text-white text-xl self-start">
+        <YoutubeLogo height={125} width={175}/>
+        <Text className=" font-Rbold text-dark-black-600 dark:text-dark-black-100 text-xl text-center">
           Sign Up
         </Text>
-        <Text className="text-gray-100 text-base my-3 self-start">
+        <Text className="text-dark-black-200 text-base my-3 self-start font-Rmedium">
           Username
         </Text>
-        <View className="rounded-2xl  border-2 border-black-100 bg-black-100 h-16 w-full items-center justify-center focus:border-secondary">
+        <View className="rounded-2xl  border-2 border-dark-black-500 bg-dark-black-500 h-16 w-full items-center justify-center focus:border-dark-black-300">
           <TextInput
-            className="w-full h-full px-4 text-white text-base"
+            className="w-full h-full px-4 text-white text-base font-Rmedium"
             value={username}
             onChangeText={(text) => {
               setUsername(text);
@@ -94,14 +128,14 @@ const RegisterScreen = () => {
           />
         </View>
         {!isValidUsername && isUsernameTyping ? (
-          <Text className="text-red-600 m-2 self-start">
+          <Text className="text-red-600 m-2 self-start font-Rregular text-xs">
             Please enter valid username
           </Text>
         ) : null}
-        <Text className="text-gray-100 text-base my-3 self-start">Email</Text>
-        <View className="rounded-2xl  border-2 border-black-100 bg-black-100 h-16 w-full items-center justify-center focus:border-secondary">
+        <Text className="text-dark-black-200 text-base my-3 self-start font-Rmedium">Email</Text>
+        <View className="rounded-2xl  border-2 border-dark-black-500 bg-dark-black-500 h-16 w-full items-center justify-center focus:border-secondary">
           <TextInput
-            className="w-full h-full text-base px-4 text-white"
+            className="w-full h-full text-base px-4 text-white font-Rmedium"
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -112,16 +146,16 @@ const RegisterScreen = () => {
           />
         </View>
         {!isValidEmail && isemailtyping ? (
-          <Text className="text-red-600 m-2 self-start">
+          <Text className="text-red-600 m-2 self-start font-Rregular text-xs">
             Please enter Valid Email
           </Text>
         ) : null}
-        <Text className="text-gray-100 text-base my-3 self-start">
+        <Text className="text-dark-black-200 text-base my-3 self-start font-Rmedium">
           Password
         </Text>
-        <View className="rounded-2xl border-2 border-black-100 bg-black-100 h-16 w-full items-center justify-center flex-row focus:border-secondary">
+        <View className="rounded-2xl  border-2 border-dark-black-500 bg-dark-black-500 h-16 w-full items-center flex-row justify-center focus:border-dark-black-300">
           <TextInput
-            className="w-[90%] h-full text-base px-4 text-white"
+            className="w-[90%] h-full text-base px-4 text-white font-Rmedium"
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -134,7 +168,7 @@ const RegisterScreen = () => {
           {isVisible ? (
             <TouchableOpacity onPress={() => setIsVisible(false)}>
               <Image
-                source={require("../../assets/svg/icons/eye.png")}
+                source={require("../../assets/icons/eye.png")}
                 className=" h-5 w-5"
                 resizeMode="contain"
               />
@@ -142,7 +176,7 @@ const RegisterScreen = () => {
           ) : (
             <TouchableOpacity onPress={() => setIsVisible(true)}>
               <Image
-                source={require("../../assets/svg/icons/eye-hide.png")}
+                source={require("../../assets/icons/eye-hide.png")}
                 className=" h-5 w-5"
                 resizeMode="contain"
               />
@@ -150,19 +184,60 @@ const RegisterScreen = () => {
           )}
         </View>
         {!isvalidPassword && ispasswordtyping ? (
-          <Text className="text-red-600 m-2">Please enter Valid Password</Text>
-        ) : null}
+              <Text className="text-red-600 m-2 self-start text-xs font-Rregular">
+                Please enter Valid Password
+              </Text>
+            ) : null}
+        <Text className="text-dark-black-200 text-base my-3 self-start font-Rmedium">
+          Confirm Password
+        </Text>
+        <View className="rounded-2xl  border-2 border-dark-black-500 bg-dark-black-500 h-16 w-full items-center flex-row justify-center focus:border-dark-black-300">
+          <TextInput
+            className="w-[90%] h-full text-base px-4 text-white font-Rmedium"
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              setIsConfirmPassTyping(true);
+            }}
+            keyboardType="default"
+            secureTextEntry={!isConfirmPasswordVisible}
+            cursorColor={"#FF8E01"}
+          />
+          {isConfirmPasswordVisible ? (
+            <TouchableOpacity onPress={() => setIsConfirmPasswordVisible(false)}>
+              <Image
+                source={require("../../assets/icons/eye.png")}
+                className=" h-5 w-5"
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => setIsConfirmPasswordVisible(true)}>
+              <Image
+                source={require("../../assets/icons/eye-hide.png")}
+                className=" h-5 w-5"
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+        {!isValidConfirmPassword && isConfirmPassTyping ? (
+              <Text className="text-red-600 m-2 self-start text-xs font-Rregular">
+                Please match password
+              </Text>
+            ) : null}
         <CustomButton
-          name={"Sign Up"}
-          textstyle={"font-pbold"}
+          name={"Register"}
+          textstyle={"font-Rbold text-lg"}
           handlePress={handleSignup}
+          submittingStatus={isSubmitting}
         />
         <View className="items-center justify-center flex-row">
-          <Text className="font-pmedium text-[#CDCDE0]">
+          <Text className="font-Rmedium text-[#CDCDE0]">
             Already have an account?
           </Text>
           <TouchableOpacity onPress={() => router.navigate("LoginScreen")}>
-            <Text className="text-secondary-200 font-pmedium"> Login</Text>
+            <Text className="text-dark-black-400 font-Rmedium"> Login</Text>
           </TouchableOpacity>
         </View>
       </View>
