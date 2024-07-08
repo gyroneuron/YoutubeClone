@@ -47,7 +47,7 @@ const profile = () => {
             </Text>
           </View>
           <CustomButton name={'Logout'} handlePress={Signout} textstyle={'font-Rbold'}/>
-          <CustomButton name={'Login'} handlePress={() => router.navigate('/RegisterScreen')} textstyle={'font-Rbold'}/>
+          <CustomButton name={'Login'} handlePress={() => router.navigate('/LoginScreen')} textstyle={'font-Rbold'}/>
         </View>
       </ScrollView>
     </SafeAreaView>

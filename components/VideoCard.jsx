@@ -8,7 +8,7 @@ const VideoCard = ({video}) => {
     <View className="w-full h-[290] items-center justify-evenly">
       <View className="w-full h-[210] items-center justify-center">
         <Image
-          source={{ uri: video.thumb }}
+          source={{ uri: video.thumbnail_url }}
           resizeMode="cover"
           className="h-full w-full"
         />

@@ -14,19 +14,24 @@ import UploadSvg from "../../assets/icons/Upload.svg";
 import { VideoView, useVideoPlayer } from "expo-video";
 import CustomButton from "../../components/CustomButton";
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import {supabase} from '../../utils/supabase';
 import { router } from "expo-router";
+import { decode } from 'base64-arraybuffer';
 
 const upload = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    video_url: "",
-    thumbnail_url: "",
+    title: '',
+    description: '',
+    video_url: '',
+    thumbnail_url: '',
     public: true,
   });
+
+  const [thumbnail, setThumbnail] = useState([]);
+  const [video, setVideo] = useState([]);
 
   const ref = useRef(null);
   const [playing, setIsPlaying] = useState(false);
@@ -45,77 +50,80 @@ const upload = () => {
   }, [player]);
 
   const openPicker = async (selectType) => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: selectType === 'video' ?
-        ImagePicker.MediaTypeOptions.Videos : 
-        ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if(!result.canceled){
-      if (selectType === 'image'){
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: selectType === 'video' ?
+          ImagePicker.MediaTypeOptions.Videos : 
+          ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
+  
+      if(!result.canceled){
+        if (selectType === 'image'){
         setForm({ ...form, thumbnail_url: result.assets[0].uri});
-      }
-
-      if (selectType === 'video'){
-        setForm({ ...form, video_url: result.assets[0].uri});
-      }
-    } else {
-      setTimeout(() => {
-        Alert.alert('Document picked', JSON.stringify(result, null, 2))
-      }, 100)
+        setThumbnail(result.assets[0]);
+        console.log(result.assets[0].type, ': picked sucessfully');
+        }
+  
+        if (selectType === 'video'){
+          setForm({ ...form, video_url: result.assets[0].uri});
+          setVideo(result.assets[0]);
+          console.log(result.assets[0].type, ': picked sucessfully');
+        }
+  
+      } else {
+        setTimeout(() => {
+          Alert.alert('Document picked', JSON.stringify(result, null, 2))
+        }, 100)
+      } 
+    } catch (error) {
+      console.log(error)
     }
   };
 
-  const uploadToStorage = async(fileUri, bucketName, folderName) => {
-    try {
-      const response = await fetch(fileUri);
-      const blob = await response.blob(); // Await the blob creation
-      const filename = fileUri.split('/').pop();
-      const filePath = `${folderName}/${filename}`;
+  const uploadToStorage = async(file, bucketName, folderName) => {
+    const contentType = file.type === 'image' ? 'image/png' : 'video/mp4';
+    const filePath = `${folderName}/${new Date().getTime()}.${file.type === 'image'? 'png': 'mp4'}`;
+    const base64 = await FileSystem.readAsStringAsync(file.uri, { encoding: 'base64' });
 
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, blob, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+    const {data, error} = await supabase.storage
+      .from(bucketName)
+      .upload(filePath , decode(base64), {
+        contentType
+      });
 
-      if (error) {
+      if(error){
         Alert.alert('Error Uploading to Storage', error.message);
+        throw error;  // Exit early if there's an error
       } else {
         return supabase.storage
-          .from(bucketName)
-          .getPublicUrl(filePath).data.publicUrl;
+         .from(bucketName)
+         .getPublicUrl(filePath).data.publicUrl;
       }
-    } catch (error) {
-      console.error('Error uploading to storage:', error);
-      Alert.alert('Error', 'An error occurred while uploading the file.');
-    }
   }
 
   const uploadVideo = async() => {
-    setSubmitting(true);
+    setUploading(true);
     try {
       if(!form.thumbnail_url || !form.video_url){
-        setSubmitting(false);
+        setUploading(false);
         return Alert.alert('Please select both video and thumbnail');
       }
+      
+      const { data, error } = await supabase.auth.getSession()
 
-      const { data, error } = await supabase.auth.getSession();
-
-      if (error) {
+      if(error){
         Alert.alert('Error fetching Session', error.message);
-        setSubmitting(false);
+        setUploading(false);
       } else {
         console.log('User session fetched!', data.session.user.id);
-
+        
         const userFolder = data.session.user.email;
 
-        const videoUrl = await uploadToStorage(form.video_url, 'user-uploads', userFolder);
-        const thumbnailUrl = await uploadToStorage(form.thumbnail_url, 'user-uploads', userFolder);
-
+        const videoUrl = await uploadToStorage(video, 'user-uploads', userFolder);
+        const thumbnailUrl = await uploadToStorage(thumbnail, 'user-uploads', userFolder);
+        
         setForm({...form, video_url: videoUrl, thumbnail_url: thumbnailUrl});
 
         Alert.alert('Success', 'Files uploaded successfully');
@@ -129,6 +137,7 @@ const upload = () => {
     }
   };
 
+
   const Upload = async() => {
     setSubmitting(true);
     try {
@@ -137,15 +146,15 @@ const upload = () => {
         return Alert.alert('Please fill all the fields');
       }
 
-      const { data, error } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession()
 
-      if (error) {
+      if(error){
         Alert.alert('Error fetching Session', error.message);
         setSubmitting(false);
       } else {
         console.log('User session fetched!', data.session.user.id);
 
-        const { data: uploadedData, error: uploadingError } = await supabase
+        const {data: uploadedData, error: uploadingError } = await supabase
           .from('videos')
           .insert([
             {
@@ -158,12 +167,12 @@ const upload = () => {
             }
           ]);
 
-        if (uploadingError) {
-          Alert.alert('Error uploading the video publicly!', uploadingError.message)
-        } else {
-          Alert.alert('Success!', 'Video is posted on Youtube');
-          router.navigate('profile');
-        }
+          if (uploadingError) {
+            Alert.alert('Error uploading the video publically!', uploadingError.message)
+          } else{
+            Alert.alert('Success!', 'Vidoe is posted on Youtube');
+            router.navigate('profile');
+          }
       }
 
     } catch (error) {
@@ -187,7 +196,7 @@ const upload = () => {
               Video Title
             </Text>
             <InputField
-              placedHolder={"Give your video a catchy title..."}
+              placedHolder={"Give your video a catch title..."}
               fieldTitle={"Video Title"}
               value={form.title}
               setValue={(text) => setForm({ ...form, title: text })}
@@ -244,7 +253,7 @@ const upload = () => {
               <TouchableOpacity className="w-full" activeOpacity={"0.7"} onPress={() => openPicker('image')}>
                 {form.thumbnail_url ? (
                   <Image
-                    source={{ uri: form.thumbnail_url }}
+                    source={{ uri: form.thumbnail_url}}
                     className="w-full h-64 rounded-2xl"
                     resizeMode="cover"
                   />
@@ -258,7 +267,7 @@ const upload = () => {
                 )}
               </TouchableOpacity>
             </View>
-            <CustomButton name={'Upload To Storage'} handlePress={uploadVideo} textstyle={'font-Rmedium text-lg text-black'} buttonStyles={'bg-[#5CA4F8]'}/>
+            <CustomButton name={'Upload To Storage'} handlePress={uploadVideo} textstyle={'font-Rmedium text-lg text-black'} buttonStyles={'bg-[#5CA4F8]'} submittingStatus={uploading}/>
             <CustomButton name={'Upload Video'} handlePress={Upload} textstyle={'font-Rmedium text-lg text-black'} buttonStyles={'bg-[#5CA4F8]'}/>
 
           </View>
