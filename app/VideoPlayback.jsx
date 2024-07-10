@@ -41,7 +41,7 @@ const VideoPlayback = () => {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const { data, error } = await supabase.from("videos").select().orderBy('', { ascending: false });;
+        const { data, error } = await supabase.from("videos").select();;
 
         if (error) {
           Alert.alert("Error fetching Videos", error.message);

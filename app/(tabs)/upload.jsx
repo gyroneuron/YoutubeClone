@@ -21,7 +21,6 @@ import { decode } from "base64-arraybuffer";
 
 const upload = () => {
   const [submitting, setSubmitting] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -289,7 +288,7 @@ const upload = () => {
               handlePress={Upload}
               textstyle={"font-Rmedium text-lg text-black"}
               buttonStyles={"bg-[#5CA4F8]"}
-              submittingStatus={uploading}
+              submittingStatus={submitting}
             />
           </View>
         </View>
