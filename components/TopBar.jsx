@@ -4,6 +4,7 @@ import YoutubeLogo from '../assets/logos/yticontext.svg';
 import Cast from '../assets/icons/Cast.svg';
 import Notification from '../assets/icons/Notification.svg';
 import Search from '../assets/icons/Search.svg';
+import { router } from 'expo-router';
 
 const TopBar = () => {
   return (
@@ -19,7 +20,7 @@ const TopBar = () => {
           <Notification height={24} width={24} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => {}}>
+        <TouchableOpacity onPress={() => router.push("/SearchScreen")}>
           <Search height={24} width={24} />
         </TouchableOpacity>
       </View>

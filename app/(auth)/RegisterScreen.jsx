@@ -32,7 +32,7 @@ const RegisterScreen = () => {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
   useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [ avatar, setAvatar ] = useState(null);
 
 
   const handleSignup = async () => {
@@ -69,7 +69,7 @@ const RegisterScreen = () => {
           const {error: profileUploadError} = await supabase
             .from("profiles")
             .insert([
-              { user_id: userData[0].id, name: username }
+              { user_id: userData[0].id, name: username, email: email }
             ]);
 
             if (profileUploadError) {
@@ -137,6 +137,7 @@ const RegisterScreen = () => {
           <TextInput
             className="w-full h-full text-base px-4 text-white font-Rmedium"
             value={email}
+            autoCapitalize="none"
             onChangeText={(text) => {
               setEmail(text);
               setIsEmailTyping(true);
@@ -157,6 +158,7 @@ const RegisterScreen = () => {
           <TextInput
             className="w-[90%] h-full text-base px-4 text-white font-Rmedium"
             value={password}
+            autoCapitalize="none"
             onChangeText={(text) => {
               setPassword(text);
               setIsPasswordTyping(true);

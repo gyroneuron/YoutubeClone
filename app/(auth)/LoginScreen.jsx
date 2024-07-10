@@ -44,7 +44,8 @@ const LoginScreen = () => {
         Alert.alert(error.name, error.message);
       } else {
         Alert.alert('Success', 'You are Logged In');
-        router.replace('/(tabs)')
+        router.replace('/(tabs)');
+        router.canGoBack(false);
       }
     } catch (error) {
       Alert.alert(error)
@@ -80,6 +81,7 @@ const LoginScreen = () => {
           <TextInput
             className="w-full h-full text-base px-4 text-white font-Rmedium"
             value={email}
+            autoCapitalize="none"
             onChangeText={(text) => {
               setEmail(text);
               setIsEmailTyping(true);
@@ -100,6 +102,7 @@ const LoginScreen = () => {
           <TextInput
             className="w-[90%] h-full text-base px-4 text-white font-Rmedium"
             value={password}
+            autoCapitalize="none"
             onChangeText={(text) => {
               setPassword(text);
               setIsPasswordTyping(true);

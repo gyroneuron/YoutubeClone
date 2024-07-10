@@ -8,8 +8,12 @@ import ShortsFilledIcon from "../../assets/icons/Short_Fill.svg";
 import AddIcon from "../../assets/icons/Add.svg";
 import SubsIcon from "../../assets/icons/Subscriptions.svg";
 import SubsFilledIcon from "../../assets/icons/Subscriptions_Fill.svg";
+import { useGlobalContext } from "@/provider/GlobalProvider";
 
 const _layout = () => {
+
+  const {profileData} = useGlobalContext();
+  
   const TabIcon = ({name}) => {
     return (
           <Text
@@ -21,7 +25,7 @@ const _layout = () => {
 
   return (
     <Tabs
-      initialRouteName="upload"
+    initialRouteName="profile"
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
@@ -112,7 +116,25 @@ const _layout = () => {
           headerShown: false,
           tabBarIcon: ({ focused, color }) => (
             <View className="items-center justify-center">
-              <Image source={require('../../assets/icons/profile-avatar.png')} resizeMode="cover" className="h-[24] w-[24] rounded-full" />
+              {profileData?.avatar ? (
+              <View className="h-6 w-6 rounded-full items-center justify-center">
+                <Image
+                  source={{ uri: profileData.avatar }}
+                  resizeMode="contain"
+                  className="h-full w-full rounded-full"
+                />
+              </View>
+            ) : (
+              <View className="h-6 w-6 rounded-full items-center justify-center">
+                <Image
+                  source={{
+                    uri: "https://img.freepik.com/free-photo/androgynous-avatar-non-binary-queer-person_23-2151100226.jpg?t=st=1720326349~exp=1720329949~hmac=ce9bdf5474aa1c797ca7f6f9cbfdd3980482279e9a7b6f1c442d74e36a00deb3&w=740",
+                  }}
+                  resizeMode="contain"
+                  className="h-full w-full rounded-full"
+                />
+              </View>
+            )}
               <TabIcon
               name={"You"}
             />

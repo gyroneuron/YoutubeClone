@@ -13,20 +13,20 @@ import InputField from "../../components/InputField";
 import UploadSvg from "../../assets/icons/Upload.svg";
 import { VideoView, useVideoPlayer } from "expo-video";
 import CustomButton from "../../components/CustomButton";
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
-import {supabase} from '../../utils/supabase';
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import { supabase } from "../../utils/supabase";
 import { router } from "expo-router";
-import { decode } from 'base64-arraybuffer';
+import { decode } from "base64-arraybuffer";
 
 const upload = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    video_url: '',
-    thumbnail_url: '',
+    title: "",
+    description: "",
+    video_url: "",
+    thumbnail_url: "",
     public: true,
   });
 
@@ -52,135 +52,144 @@ const upload = () => {
   const openPicker = async (selectType) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: selectType === 'video' ?
-          ImagePicker.MediaTypeOptions.Videos : 
-          ImagePicker.MediaTypeOptions.Images,
+        mediaTypes:
+          selectType === "video"
+            ? ImagePicker.MediaTypeOptions.Videos
+            : ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         quality: 1,
       });
-  
-      if(!result.canceled){
-        if (selectType === 'image'){
-        setForm({ ...form, thumbnail_url: result.assets[0].uri});
-        setThumbnail(result.assets[0]);
-        console.log(result.assets[0].type, ': picked sucessfully');
+
+      if (!result.canceled) {
+        if (selectType === "image") {
+          setForm({ ...form, thumbnail_url: result.assets[0].uri });
+          setThumbnail(result.assets[0]);
+          console.log(result.assets[0].type, ": picked sucessfully");
         }
-  
-        if (selectType === 'video'){
-          setForm({ ...form, video_url: result.assets[0].uri});
+
+        if (selectType === "video") {
+          setForm({ ...form, video_url: result.assets[0].uri });
           setVideo(result.assets[0]);
-          console.log(result.assets[0].type, ': picked sucessfully');
+          console.log(result.assets[0].type, ": picked sucessfully");
         }
-  
       } else {
         setTimeout(() => {
-          Alert.alert('Document picked', JSON.stringify(result, null, 2))
-        }, 100)
-      } 
-    } catch (error) {
-      console.log(error)
-    }
-  };
-
-  const uploadToStorage = async(file, bucketName, folderName) => {
-    const contentType = file.type === 'image' ? 'image/png' : 'video/mp4';
-    const filePath = `${folderName}/${new Date().getTime()}.${file.type === 'image'? 'png': 'mp4'}`;
-    const base64 = await FileSystem.readAsStringAsync(file.uri, { encoding: 'base64' });
-
-    const {data, error} = await supabase.storage
-      .from(bucketName)
-      .upload(filePath , decode(base64), {
-        contentType
-      });
-
-      if(error){
-        Alert.alert('Error Uploading to Storage', error.message);
-        throw error;  // Exit early if there's an error
-      } else {
-        return supabase.storage
-         .from(bucketName)
-         .getPublicUrl(filePath).data.publicUrl;
-      }
-  }
-
-  const uploadVideo = async() => {
-    setUploading(true);
-    try {
-      if(!form.thumbnail_url || !form.video_url){
-        setUploading(false);
-        return Alert.alert('Please select both video and thumbnail');
-      }
-      
-      const { data, error } = await supabase.auth.getSession()
-
-      if(error){
-        Alert.alert('Error fetching Session', error.message);
-        setUploading(false);
-      } else {
-        console.log('User session fetched!', data.session.user.id);
-        
-        const userFolder = data.session.user.email;
-
-        const videoUrl = await uploadToStorage(video, 'user-uploads', userFolder);
-        const thumbnailUrl = await uploadToStorage(thumbnail, 'user-uploads', userFolder);
-        
-        setForm({...form, video_url: videoUrl, thumbnail_url: thumbnailUrl});
-
-        Alert.alert('Success', 'Files uploaded successfully');
-        console.log('Video URL:', videoUrl);
-        console.log('Thumbnail URL:', thumbnailUrl);
+          Alert.alert("Document picked", JSON.stringify(result, null, 2));
+        }, 100);
       }
     } catch (error) {
       console.log(error);
-    } finally {
-      setUploading(false);
     }
   };
 
+  const uploadToStorage = async (file, bucketName, folderName) => {
+    const contentType = file.type === "image" ? "image/png" : "video/mp4";
+    const filePath = `${folderName}/${new Date().getTime()}.${
+      file.type === "image" ? "png" : "mp4"
+    }`;
+    const base64 = await FileSystem.readAsStringAsync(file.uri, {
+      encoding: "base64",
+    });
 
-  const Upload = async() => {
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, decode(base64), {
+        contentType,
+      });
+
+    if (error) {
+      Alert.alert("Error Uploading to Storage", error.message);
+      throw error; // Exit early if there's an error
+    } else {
+      return supabase.storage.from(bucketName).getPublicUrl(filePath).data
+        .publicUrl;
+    }
+  };
+
+  const Upload = async () => {
+    //Final Video Submission Function
     setSubmitting(true);
     try {
-      if(!form.title || !form.description || !form.thumbnail_url || !form.video_url){
-        setSubmitting(false);
-        return Alert.alert('Please fill all the fields');
+      if (
+        !form.title ||
+        !form.description ||
+        !form.thumbnail_url ||
+        !form.video_url
+      ) {
+        return Alert.alert("Please fill all the fields");
       }
 
-      const { data, error } = await supabase.auth.getSession()
+      const { data, error } = await supabase.auth.getSession(); //Fetching User Session
 
-      if(error){
-        Alert.alert('Error fetching Session', error.message);
-        setSubmitting(false);
+      if (error) {
+        Alert.alert("Error fetching Session", error.message);
       } else {
-        console.log('User session fetched!', data.session.user.id);
+        console.log("User session fetched!", data.session.user.id);
 
-        const {data: uploadedData, error: uploadingError } = await supabase
-          .from('videos')
-          .insert([
-            {
-              user_id: data.session.user.id,
-              title: form.title,
-              description: form.description,
-              video_url: form.video_url,
-              thumbnail_url: form.thumbnail_url,
-              creator: data.session.user.user_metadata.fullName
-            }
-          ]);
+        const userFolder = data.session.user.email;
+
+        const videoUrl = await uploadToStorage(
+          video,
+          "user-uploads",
+          userFolder
+        );
+        const thumbnailUrl = await uploadToStorage(
+          thumbnail,
+          "user-uploads",
+          userFolder
+        );
+
+        setForm({
+          ...form,
+          video_url: videoUrl,
+          thumbnail_url: thumbnailUrl,
+        });
+
+        Alert.alert("Success", "Files uploaded successfully");
+        console.log("Video URL:", videoUrl);
+        console.log("Thumbnail URL:", thumbnailUrl);
+
+        const { data: profileAvatar, error } = await supabase
+          .from("profiles")
+          .select("avatar")
+          .eq("user_id", data.session.user.id)
+          .single();
+
+        if (error) {
+          Alert.alert("Error fetching Avatar from Profiles", error.message);
+        } else {
+          const avatarUrl = profileAvatar.avatar;
+          const { data: uploadedData, error: uploadingError } = await supabase
+            .from("videos")
+            .insert([
+              {
+                user_id: data.session.user.id,
+                title: form.title,
+                description: form.description,
+                video_url: form.video_url,
+                thumbnail_url: form.thumbnail_url,
+                creator: data.session.user.user_metadata.fullName,
+                avatar: avatarUrl,
+              },
+            ]);
 
           if (uploadingError) {
-            Alert.alert('Error uploading the video publically!', uploadingError.message)
-          } else{
-            Alert.alert('Success!', 'Vidoe is posted on Youtube');
-            router.navigate('profile');
+            Alert.alert(
+              "Error uploading the video publically!",
+              uploadingError.message
+            );
+          } else {
+            Alert.alert("Success!", "Vidoe is posted on Youtube");
+            router.navigate("profile");
           }
+        }
       }
-
     } catch (error) {
-      console.log('Unknown caught error: ', error)
+      console.log("Unknown caught error: ", error);
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-dark-black-100 dark:bg-black h-full w-full items-center justify-center">
@@ -204,7 +213,7 @@ const upload = () => {
               multiline={false}
               scrollEnabled={false}
             />
-            
+
             <View className="w-full flex-row space-x-2">
               <Text className="text-dark-black-200 text-base my-3 self-start font-Rmedium">
                 Description
@@ -216,7 +225,7 @@ const upload = () => {
               value={form.description}
               setValue={(text) => setForm({ ...form, description: text })}
               type={"default"}
-              styles={'h-[100]'}
+              styles={"h-[100]"}
               multiline={true}
               scrollEnabled={true}
             />
@@ -225,35 +234,43 @@ const upload = () => {
               <Text className="text-dark-black-200 text-base my-3 self-start font-Rmedium">
                 Upload Video
               </Text>
-              <TouchableOpacity className="w-full" activeOpacity={"0.7"} onPress={() => openPicker('video')}>
-                {form.video_url ? (
-                  <VideoView
-                    ref={ref}
-                    className="w-full h-64 rounded-2xl"
-                    player={player}
-                    allowsFullscreen
-                    allowsPictureInPicture
-                    nativeControls
-                    showsTimecodes
-                    contentFit="cover"
-                  />
-                ) : (
+              {form.video_url ? (
+                <VideoView
+                  ref={ref}
+                  className="w-full h-64 rounded-2xl"
+                  player={player}
+                  allowsFullscreen
+                  allowsPictureInPicture
+                  nativeControls
+                  showsTimecodes
+                  contentFit="cover"
+                />
+              ) : (
+                <TouchableOpacity
+                  className="w-full"
+                  activeOpacity={"0.7"}
+                  onPress={() => openPicker("video")}
+                >
                   <View className="w-full h-40 px-4 bg-dark-black-500 rounded-2xl items-center justify-center">
                     <View className="w-14 h-14 border border-dashed border-dark-black-200 items-center justify-center">
                       <UploadSvg height={28} width={28} />
                     </View>
                   </View>
-                )}
-              </TouchableOpacity>
+                </TouchableOpacity>
+              )}
             </View>
             <View className="w-full space-y-2">
               <Text className="text-dark-black-200 text-base my-3 self-start font-Rmedium">
                 Thumbnail Image
               </Text>
-              <TouchableOpacity className="w-full" activeOpacity={"0.7"} onPress={() => openPicker('image')}>
+              <TouchableOpacity
+                className="w-full"
+                activeOpacity={"0.7"}
+                onPress={() => openPicker("image")}
+              >
                 {form.thumbnail_url ? (
                   <Image
-                    source={{ uri: form.thumbnail_url}}
+                    source={{ uri: form.thumbnail_url }}
                     className="w-full h-64 rounded-2xl"
                     resizeMode="cover"
                   />
@@ -267,9 +284,13 @@ const upload = () => {
                 )}
               </TouchableOpacity>
             </View>
-            <CustomButton name={'Upload To Storage'} handlePress={uploadVideo} textstyle={'font-Rmedium text-lg text-black'} buttonStyles={'bg-[#5CA4F8]'} submittingStatus={uploading}/>
-            <CustomButton name={'Upload Video'} handlePress={Upload} textstyle={'font-Rmedium text-lg text-black'} buttonStyles={'bg-[#5CA4F8]'}/>
-
+            <CustomButton
+              name={"Upload Video"}
+              handlePress={Upload}
+              textstyle={"font-Rmedium text-lg text-black"}
+              buttonStyles={"bg-[#5CA4F8]"}
+              submittingStatus={uploading}
+            />
           </View>
         </View>
       </ScrollView>
