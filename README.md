@@ -1,50 +1,94 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+---
 
-## Get started
+# YouTubeClone App
 
-1. Install dependencies
+YouTubeClone is a React Native Expo app that replicates the core functionalities of YouTube. This project uses Supabase as the backend service for authentication, database, and storage.
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+### Authentication
+- **Email-based Login**: Secure email-based authentication using Supabase.
+- **Sign Up**: Register new users with email and password.
+- **Session Management**: Persist user sessions with automatic session refresh.
 
-   ```bash
+### Home Screen
+- **Video List**: Display a list of all videos available on the platform.
+- **Thumbnail Display**: Show video thumbnails fetched from Supabase storage.
+- **Video Details**: Display video titles and other metadata.
+
+### Video Playback Screen
+- **Video Player**: Play videos using the video player component.
+- **Video Details**: Display video title, description, and upload date.
+- **Latest Videos**: Show latest videos based on date of upload.
+
+### Profile Screen
+- **User Info**: Display user's name, email, and account creation date.
+- **Profile Picture**: Update and display profile picture.
+- **Video Count**: Show the number of videos uploaded by the user.
+- **Logout**: Log out from the account and clear session.
+
+### Search Functionality
+- **Search Videos**: Search videos by title from the Supabase database.
+- **Search Results**: Display the search results dynamically as the user types.
+
+### Upload Functionality
+- **Video Upload**: Upload videos from the device to Supabase storage.
+- **Thumbnail Upload**: Upload video thumbnails.
+- **Title and Decsription**: Add beautiful title and description for each video.
+
+### Additional Features
+- **User Avatar Update**: Update user profile avatar with an image picker.
+- **Responsive Design**: Responsive UI for different screen sizes.
+- **Custom Buttons**: Reusable custom button component for consistent styling.
+- **Menu Navigation(To be made functional in upcoming pushes)**: Menu buttons for navigation to different sections like "Your Channel," "Your Videos," "Downloads," etc.
+- **Authentication Error Handling**: Handle authentication errors gracefully with user-friendly messages.
+
+
+## Tech Stack
+- React Native: Framework for building native apps using React.
+- Expo: Toolset for developing and building React Native apps.
+- Supabase: Backend-as-a-Service providing authentication, database, and storage.
+- React Navigation: Navigation library for React Native apps.
+- Expo Router: Declarative routing for React Native.
+- NativeWind: Utility-first CSS framework for styling (via tailwindcss-react-native).
+
+## Getting Started
+To get a local copy of the project up and running, follow these steps:
+
+### Prerequisites
+- Node.js installed on your machine.
+- Supabase account for backend services.
+
+### Installation
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/gyroneuron/YoutubeClone.git
+    cd YoutubeClone
+    ```
+
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3. Configure Supabase:
+    - Create a new project on Supabase.
+    - Obtain your Supabase URL and public API key.
+    - Create the necessary tables (profiles, videos, users) and configure storage buckets (avatars, videos).
+    - Update the `supabase.js` configuration file with your Supabase project details.
+
+4. Run the app:
+    ```bash
     npx expo start
-   ```
+    ```
 
-In the output, you'll find options to open the app in a
+## Usage
+- Register or log in with an email and password.
+- Upload videos and thumbnails.
+- Browse and search for videos.
+- Update your profile picture.
+- Navigate through different sections using the menu.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Contributing
+Contributions are welcome! Please open an issue or submit a pull request for any bugs or feature requests.
